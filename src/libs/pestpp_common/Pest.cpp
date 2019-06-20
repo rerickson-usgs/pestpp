@@ -371,6 +371,11 @@ int Pest::process_ctl_file(ifstream &fin, string pst_filename)
 	return process_ctl_file(fin, pst_filename, f_out);
 }
 
+int Pest::process_ctl_file_v2(ifstream & fin, string pst_filename, ofstream & f_rec)
+{
+	return 0;
+}
+
 int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 {
 	string line;
@@ -417,7 +422,9 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 
 	set<string> tied_names;
 	pst_filename = _pst_filename;
-
+	int version;
+	set<string> sections_found;
+	stringstream ss;
 #ifndef _DEBUG
 	try {
 #endif
@@ -432,9 +439,48 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 		
 		if (lnum == 1)
 		{
+			
 			if (tokens[0] != "PCF")
 			{
-				cout << "WARNING: fist line of control file should be 'PCF' not " << tokens[0] << endl;
+				ss << "ERROR: fist line of control file should be 'PCF' not " << tokens[0];
+				f_rec << ss.str() << endl;
+				cout << ss.str() << endl;
+				throw runtime_error(ss.str());
+			}
+			if (tokens.size() > 1)
+			{
+				string vstring = tokens[1];
+				if (vstring.substr(0, 7) != "VERSION")
+				{
+					ss << "ERROR: unrecognized token on 'PCF' line (looking for 'VERSION' tag): " << vstring;
+					f_rec << ss.str() << endl;
+					cout << ss.str() << endl;
+					throw runtime_error(ss.str());
+				}
+				vstring = tokens[tokens.size() - 1];
+				char vchar = vstring[vstring.size() - 1];
+
+				try
+				{
+					version = vchar - '0';
+				}
+				catch (...)
+				{
+					ss << "error trying to cast version number: " << vstring[vstring.size() - 1] << " on line: " << line << endl;
+					f_rec << ss.str() << endl;
+					cout << ss.str() << endl;
+					throw runtime_error(ss.str());
+				}
+				if (version == 1)
+					continue;
+				else if (version == 2)
+				{
+					//process_ctl_file_v2(fin, pst_filename, f_rec);
+					//break;
+				}
+				else
+					throw runtime_error("ERROR: unsupported version (must be 1 or 2) on line:" + line);
+
 			}
 		}
 
@@ -456,8 +502,33 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 			section = upper_cp(strip_cp(line_upper, "both", " *\t\n"));
 			sec_begin_lnum = lnum;
 		}
+
+		else if (section == "CONTROL DATA KEYWORD")
+		{
+			if ((sec_lnum == 1) && (sections_found.find("CONTROL DATA") != sections_found.end()))
+			{
+				ss << "ERROR: duplicate contol data (keyword) sections";
+				f_rec << ss.str() << endl;
+				cout << ss.str() << endl;
+				throw runtime_error(ss.str());
+			}
+			sections_found.emplace("CONTROL DATA");
+		
+	
+		
+		}
+
 		else if (section == "CONTROL DATA")
 		{
+			if ((sec_lnum == 1) && (sections_found.find("CONTROL DATA KEYWORD") != sections_found.end()))
+			{
+				ss << "ERROR: duplicate contol data (keyword) sections";
+				f_rec << ss.str() << endl;
+				cout << ss.str() << endl;
+				throw runtime_error(ss.str());
+			}
+			sections_found.emplace("CONTROL DATA");
+
 			if (sec_lnum == 1)
 			{
 				if (tokens[1] == "REGULARIZATION" || tokens[1] == "REGULARISATION")
@@ -548,6 +619,8 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 		}
 		else if (section == "PARAMETER GROUPS")
 		{
+			
+
 			ParameterGroupRec pgi;
 			name = tokens[0];
 			size_t n_tokens = tokens.size();
@@ -565,6 +638,7 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 		}
 		else if (section == "PARAMETER DATA")
 		{
+			
 			if (sec_lnum <= num_par) {
 				double scale;
 				double offset;
@@ -639,6 +713,8 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 		}
 		else if (section == "OBSERVATION GROUPS")
 		{
+			
+
 			string name = tokens[0];
 			if (tokens.size() > 1)
 			{
@@ -669,6 +745,8 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 
 		else if (section == "PRIOR INFORMATION")
 		{
+			
+
 			//This section processes the prior information.  It does not write out the
 			//last prior infomration.  THis is because it must check for line continuations
 			if (!prior_info_string.empty() && tokens[0] != "&"){

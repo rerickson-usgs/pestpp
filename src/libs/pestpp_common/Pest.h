@@ -104,6 +104,8 @@ private:
 	DynamicRegularization *regul_scheme_ptr;
 	map<int,string> other_lines;
 	string pst_filename;
+
+	int process_ctl_file_v2(ifstream &fin, string pst_filename, ofstream &f_rec);
 };
 ostream& operator<< (ostream &os, const Pest& val);
 #endif /* PEST_H_ */

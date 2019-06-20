@@ -442,12 +442,29 @@ def sen_plusplus_test():
     pyemu.os_utils.start_slaves(t_d, exe_path.replace("-ies","-sen"), "pest_sen.pst", 5, master_dir=m_d,
                            slave_root=model_d,local=local,port=port)
 
+def new_fmt_test1():
+    model_d = "ies_10par_xsec"
+    local=True
+    if "linux" in platform.platform().lower() and "10par" in model_d:
+        #print("travis_prep")
+        #prep_for_travis(model_d)
+        local=False
+    
+    t_d = os.path.join(model_d,"template")
+    m_d = os.path.join(model_d,"master_newpstfmt")
+    if os.path.exists(m_d):
+        shutil.rmtree(m_d)
+    shutil.copytree(t_d,m_d)
+    pst = pyemu.Pst(os.path.join(m_d,"pest.pst"))
+    pst.write(os.path.join(m_d,"pest_new.pst"),version=2)
+
 if __name__ == "__main__":
+    new_fmt_test1()
     #sen_plusplus_test()
     #parchglim_test()
     #unc_file_test()
 
-    basic_test("ies_10par_xsec")
+    #basic_test("ies_10par_xsec")
     #glm_save_binary_test()
     #sweep_forgive_test()
     #inv_regul_test()
