@@ -215,16 +215,22 @@ class PestppOptions {
 public:
 	enum SVD_PACK { EIGEN, PROPACK, REDSVD };
 	enum MAT_INV { Q12J, JTQJ };
+	enum PPARG_STATUS {ACCEPTED_ARG, DUPLICATE_ARG, NOTFOUND_ARG, INVALID_ARG};
 	enum GLOBAL_OPT { NONE, OPT_DE };
-	PestppOptions(int _n_iter_base = 50, int _n_iter_super = 0, int _max_n_super = 50,
-		double _super_eigthres = 1.0E-6, SVD_PACK _svd_pack = PestppOptions::REDSVD,
-		MAT_INV _mat_inv = PestppOptions::JTQJ, double _auto_norm = -999,
-		double _super_relparmax = 0.1, int max_run_fail = 3,
-		bool iter_summary_flag = true, bool der_forgive = true,
-		double overdue_reched_fac = 1.15, double overdue_giveup_fac = 100, double reg_frac = -1.0,
-		GLOBAL_OPT _global_opt = PestppOptions::NONE,
-		double _de_f = 0.8, double _de_cr = 0.9, int _de_npopulation = 40, int _de_max_gen = 100, bool _de_dither_f = true);
-	void parce_line(const string &line);
+	/*PestppOptions(int _n_iter_base, int _n_iter_super, int _max_n_super,
+		double _super_eigthres, SVD_PACK _svd_pack,
+		MAT_INV _mat_inv, double _auto_norm,
+		double _super_relparmax, int max_run_fail,
+		bool iter_summary_flag, bool der_forgive,
+		double overdue_reched_fac, double overdue_giveup_fac, double reg_frac,
+		GLOBAL_OPT _global_opt,
+		double _de_f, double _de_cr, int _de_npopulation, 
+		int _de_max_gen, bool _de_dither_f);*/
+	PestppOptions() { ; }
+
+
+	void parse_plusplus_line(const string &line);
+	PPARG_STATUS assign_plusplus_value_by_name(string name, string value, string line);
 	int get_max_n_super() const { return max_n_super; }
 	double get_super_eigthres() const { return super_eigthres; }
 	int get_n_iter_base() const { return n_iter_base; }
@@ -450,6 +456,8 @@ public:
 	map<string, string> get_arg_map()const { return arg_map; }
 
 private:
+	void set_defaults();
+
 	int n_iter_base;
 	int n_iter_super;
 	int max_n_super;

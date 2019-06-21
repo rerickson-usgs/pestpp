@@ -425,6 +425,8 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 	int version;
 	set<string> sections_found;
 	stringstream ss;
+	PestppOptions::PPARG_STATUS ppstat;
+
 #ifndef _DEBUG
 	try {
 #endif
@@ -513,8 +515,24 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 				throw runtime_error(ss.str());
 			}
 			sections_found.emplace("CONTROL DATA");
-		
-	
+			
+			ppstat = pestpp_options.assign_plusplus_value_by_name(tokens[0], tokens[1], line);
+			if (ppstat == PestppOptions::PPARG_STATUS::ACCEPTED_ARG)
+			{
+			}
+			else if (ppstat == PestppOptions::PPARG_STATUS::NOTFOUND_ARG)
+			{
+
+			}
+			else if (ppstat == PestppOptions::PPARG_STATUS::DUPLICATE_ARG)
+			{
+				throw PestParsingError("duplicate pestpp key, value arg: " + tokens[0] + "," + tokens[1]);
+
+			}
+			else if (ppstat == PestppOptions::PPARG_STATUS::INVALID_ARG)
+			{
+				throw PestParsingError("invalid pestpp key, value arg: " + tokens[0] + "," + tokens[1]);
+			}
 		
 		}
 
@@ -885,10 +903,10 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 #endif
 	fin.close();
 	// process pest++ options last
-	pestpp_options.set_n_iter_super(0);
-	pestpp_options.set_n_iter_base(max(1, control_info.noptmax));
-	pestpp_options.set_super_eigthres(svd_info.eigthresh);
-	pestpp_options.set_max_n_super(ctl_parameters.size());
+	//pestpp_options.set_n_iter_super(0);
+	//pestpp_options.set_n_iter_base(max(1, control_info.noptmax));
+	//pestpp_options.set_super_eigthres(svd_info.eigthresh);
+	//pestpp_options.set_max_n_super(ctl_parameters.size());
 	pestpp_options.set_max_super_frz_iter(5);
 	pestpp_options.set_max_n_super(n_adj_par);
 	pestpp_options.set_max_reg_iter(20);
@@ -981,7 +999,7 @@ int Pest::process_ctl_file(ifstream &fin, string _pst_filename, ofstream &f_rec)
 	for(vector<string>::const_iterator b=pestpp_input.begin(),e=pestpp_input.end();
 		b!=e; ++b) {
 
-			pestpp_options.parce_line(*b);
+			pestpp_options.parse_plusplus_line(*b);
 	}
 	
 	if (pestpp_options.get_auto_norm() > 0.0)
